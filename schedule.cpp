@@ -5,6 +5,9 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <vector>
+#include "scheduler.h"
+
+#define NORMAL_EXIT 0 
 
 FILE* open_file(std::string filename) {
     FILE *file = fopen(filename.c_str() , "r");
@@ -26,11 +29,43 @@ std::string read_line(FILE *file) {
     return std::string(line);
 }
 
-std::string remove_endline(std::string line) {
-    if (line[line.length() - 1] == '\n') {
-        line = line.substr(0, line.length() - 1);
+std::vector<int> convert_line_to_ints(std::string line) {
+    std::vector<int> ints = std::vector<int>();
+    std::string num = "";
+
+    //iterate through each character in the line
+    for (int i = 0; i < line.length(); i++) {
+        //if the character is a space, convert the number to an int and add it to the vector
+        if (line[i] == ' ') {
+            ints.push_back(std::stoi(num));
+            num = "";
+        } else {
+            num += line[i];
+        }
     }
-    return line;
+    //add the last number to the vector
+    ints.push_back(std::stoi(num));
+    return ints;
+}
+
+void check_if_odd(std::vector<std::vector<int>> lines) {
+    for (int i = 0; i < lines.size(); i++) {
+        if (lines[i].size() % 2 != 1) {
+            fprintf(stderr, "odd number of burst in line %i\n", i + 1);
+            exit(NORMAL_EXIT);
+        }
+    }
+}
+
+void check_contains_zero(std::vector<std::vector<int>> lines) {
+    for (int i = 0; i < lines.size(); i++) {
+        for (int j = 0; j < lines[i].size(); j++) {
+            if (lines[i][j] == 0) {
+                fprintf(stderr, "zero burst in line %i\n", i + 1);
+                exit(NORMAL_EXIT);
+            }
+        }
+    }
 }
 
 int main(int argc, char **argv) {
@@ -60,16 +95,25 @@ int main(int argc, char **argv) {
     FILE *file = open_file(filename.c_str());
 
     //read lines from file
-    std::vector<std::string> lines = std::vector<std::string>();
+    std::vector<std::vector<int>> lines = std::vector<std::vector<int>>();
     std::string line;
     for (int i = 0; (line = read_line(file)) != ""; i++) {
-        line = remove_endline(line);
-        lines.push_back(line);
-        std::cout << "line " << i << ": " << lines[i] << std::endl;
+        lines.push_back(convert_line_to_ints(line));
+        for (int j = 0; j < lines[i].size(); j++) {
+            printf("%d ", lines[i][j]);
+        }
+        printf("\n");
     }
 
     //close file
     fclose(file);
+
+    //check if valid input
+    check_if_odd(lines);
+    check_contains_zero(lines);
+
+    //create scheduler in new thread
+    Scheduler scheduler = Scheduler(lines, exponential, option_argument);
 
 
     return 0;
