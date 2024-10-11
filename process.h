@@ -20,14 +20,18 @@ public:
     std::queue<int> cpu_bursts;
     std::queue<int> io_bursts;
 
-    Process(int pid, int arrival_time, std::queue<int> bursts);
+    Process(int pid, int arrival_time, std::vector<int> bursts);
 
-    void sort_into_queues();
+    void sort_into_queues() {};
 
-    void start(int time);
-    void stop(int time);
-    void resume(int time);
-    void complete(int time);
-    void print();
+    bool operator<(const Process &p) const {
+        return this->arrival_time < p.arrival_time;
+    }
+
+    void print() {
+
+    }
+
+
 
 };

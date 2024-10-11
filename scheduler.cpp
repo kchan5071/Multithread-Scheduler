@@ -10,29 +10,28 @@ Scheduler::Scheduler(std::vector<std::vector<int>> bursts, bool exponential, std
     this->start_time = 0;
     this->end_time = 0;
     this->current_time = 0;
+    this -> number_of_processes = bursts.size();
 
     //create processes
-    for (int i = 0; i < bursts.size(); i++) {
-        std::queue<int> cpu_bursts;
-        std::queue<int> io_bursts;
-        for (int j = 0; j < bursts[i].size(); j++) {
-            if (j % 2 == 0) {
-                cpu_bursts.push(bursts[i][j]);
-            } else {
-                io_bursts.push(bursts[i][j]);
-            }
-        }
-        this->processes.push_back(Process(i, bursts[i][0], cpu_bursts, io_bursts));
+    for (int i = 0; i < number_of_processes; i++) {
+        // Process process = Process(i, 0, bursts[i]);
+        // this->processes.push_back(process);
     }
 
     //put processes in ready queue
     for (int i = 0; i < this->processes.size(); i++) {
-        this->processes[i].sort_into_queues();
-        this->ready_queue.push_back(this->processes[i]);
+        // this->processes[i].sort_into_queues();
+        // this->ready_queue.push_back(this->processes[i]);
     }
 
     //sort ready queue
-    this->sort_ready_queue();
+    // this->sort_ready_queue();
+}
+
+void Scheduler::sort_into_queues() {
+    for (int i = 0; i < this->processes.size(); i++) {
+        this->processes[i].sort_into_queues();
+    }
 }
 
 void Scheduler::sort_ready_queue() {
@@ -54,5 +53,11 @@ void Scheduler::sort_ready_queue() {
         }
     }
     delete &temp;
+}
+
+void Scheduler::print() {
+    for (int i = 0; i < this->processes.size(); i++) {
+        this->processes[i].print();
+    }
 }
 
