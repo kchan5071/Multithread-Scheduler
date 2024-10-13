@@ -1,6 +1,6 @@
 #include "scheduler.h"
 
-Scheduler::Scheduler(std::vector<std::vector<int>> bursts, bool exponential, std::string option_argument) {
+Scheduler::Scheduler(std::vector< std::vector<int> > bursts, bool exponential, std::string option_argument) {
     this->time = 0;
     this->exponential = exponential;
     this->option_argument = option_argument;
@@ -10,22 +10,22 @@ Scheduler::Scheduler(std::vector<std::vector<int>> bursts, bool exponential, std
     this->start_time = 0;
     this->end_time = 0;
     this->current_time = 0;
-    this -> number_of_processes = bursts.size();
+    this->number_of_processes = bursts.size();
 
-    //create processes
+    // Create processes
     for (int i = 0; i < number_of_processes; i++) {
-        // Process process = Process(i, 0, bursts[i]);
-        // this->processes.push_back(process);
+        Process process = Process(i, 0, bursts[i]);
+        this->processes.push_back(process);
     }
 
-    //put processes in ready queue
+    // Put processes in ready queue
     for (int i = 0; i < this->processes.size(); i++) {
-        // this->processes[i].sort_into_queues();
-        // this->ready_queue.push_back(this->processes[i]);
+        this->processes[i].sort_into_queues();
+        this->ready_queue.push_back(this->processes[i]);
     }
 
-    //sort ready queue
-    // this->sort_ready_queue();
+    // Sort ready queue
+    this->sort_ready_queue();
 }
 
 void Scheduler::sort_into_queues() {
@@ -35,29 +35,33 @@ void Scheduler::sort_into_queues() {
 }
 
 void Scheduler::sort_ready_queue() {
-    //take out into vector
+    // Take out into vector
     std::vector<Process> temp;
     for (int i = 0; i < this->ready_queue.size(); i++) {
         if (this->ready_queue[i].arrival_time <= this->time) {
             temp.push_back(this->ready_queue[i]);
         }
     }
-    //sort
-    std::sort(temp.begin(), temp.end());
+    // Sort
+    // Sorting logic here
+}
 
-    //place back in queue
-    for (int i = 0; i < this->ready_queue.size(); i++) {
-        if (this->ready_queue[i].arrival_time <= this->time) {
-            this->ready_queue[i] = temp[0];
-            temp.erase(temp.begin());
-        }
-    }
-    delete &temp;
+void Scheduler::start() {
+    // Implementation of start
+}
+
+int Scheduler::get_number_of_bursts() {
+    return this->number_of_bursts;
+}
+
+void Scheduler::sort_blocked_queue() {
+    // Implementation of sort_blocked_queue
+}
+
+void Scheduler::update_queues() {
+    // Implementation of update_queues
 }
 
 void Scheduler::print() {
-    for (int i = 0; i < this->processes.size(); i++) {
-        this->processes[i].print();
-    }
+    // Implementation of print
 }
-

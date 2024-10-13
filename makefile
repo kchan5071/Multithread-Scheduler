@@ -1,13 +1,9 @@
 compile:
-	g++ -std=c++11 scheduler.cpp -o scheduler.o -c
-	g++ -std=c++11 process.cpp -o process.o -c
 	gcc log.c -o log.o -c
-	g++ -std=c++11 schedule.cpp -o schedule -c
-
-# link:
- 	g++ -std=c++11 -pthread process.o scheduler.o log.o main.o -o schedule
-
-
+	g++ -std=c++11 -pthread -c process.cpp -o process.o
+	g++ -std=c++11 -pthread -c scheduler.cpp -o scheduler.o
+	g++ -std=c++11 -pthread schedule.cpp process.o scheduler.o log.o -o schedule
+	
 run:
 	make compile
 	./schedule bursts.txt -a 0.5 

@@ -1,3 +1,6 @@
+#ifndef SCHEDULER_H
+#define SCHEDULER_H
+
 #include <string>
 #include <vector>
 #include <queue>
@@ -7,12 +10,11 @@
 class Scheduler {
 public:
 
-    Scheduler(std::vector<std::vector<int>> bursts, bool exponential, std::string option_argument);
+    Scheduler(std::vector< std::vector<int> > bursts, bool exponential, std::string option_argument);
 
-    void start() {}
+    void start();
 
-    int get_number_of_bursts() {return -1;}
-
+    int get_number_of_bursts();
 private:
     std::vector<Process> processes;
     std::vector<Process> ready_queue;
@@ -36,9 +38,11 @@ private:
 
     void sort_ready_queue();
 
-    void sort_blocked_queue() {}
+    void sort_blocked_queue();
 
-    void update_queues() {}
+    void update_queues();
 
     void print();
 };
+
+#endif
