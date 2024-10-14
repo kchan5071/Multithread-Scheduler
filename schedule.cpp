@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <vector>
+#include <pthread.h>
+
 #include "scheduler.h"
 
 #define NORMAL_EXIT 0 
@@ -110,14 +112,28 @@ int main(int argc, char **argv) {
     check_if_odd(lines);
     check_contains_zero(lines);
 
-    for (int i = 0; i < lines.size(); i++) {
-        for (int j = 0; j < lines[i].size(); j++) {
-            printf("%d ", lines[i][j]);
-        }
-        printf("\n");
-    }
+    // for (int i = 0; i < lines.size(); i++) {
+    //     for (int j = 0; j < lines[i].size(); j++) {
+    //         printf("%d ", lines[i][j]);
+    //     }
+    //     printf("\n");
+    // }
 
     //create scheduler in new thread
-    Scheduler scheduler = Scheduler(lines, exponential, option_argument);
+    pthread_t scheduler_thread;
+    SchedulerArgs args;
+    args.lines = lines;
+    args.exponential = exponential;
+    args.option_argument = option_argument;
+    pthread_create(&scheduler_thread, NULL, run_scheduler, (void *)&args);
+
+    //wait for scheduler to finish
+    pthread_join(scheduler_thread, NULL);
+
+
+
+
+
+
     return 0;
 }

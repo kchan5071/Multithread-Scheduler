@@ -5,44 +5,28 @@
 #include <vector>
 #include <queue>
 #include <algorithm>
+#include <pthread.h>
 #include "process.h"
+extern "C" {
+    #include "log.h"
+}
 
-class Scheduler {
-public:
+void* run_scheduler(void *ptr);
 
-    Scheduler(std::vector< std::vector<int> > bursts, bool exponential, std::string option_argument);
+bool all_bursts_completed(Process process);
 
-    void start();
+std::vector<Process> create_processes(std::vector< std::vector<int> > lines);
 
-    int get_number_of_bursts();
-private:
-    std::vector<Process> processes;
-    std::vector<Process> ready_queue;
-    std::vector<Process> blocked_queue;
-    int time;
+Process create_process(int pid, std::vector<int> bursts);
+
+std::vector<Process> sort_processes(std::vector<Process> processes);
+
+bool all_processes_finished(std::vector<Process> processes);
+
+struct SchedulerArgs {
+    std::vector< std::vector<int> > lines;
     bool exponential;
-    int current_burst;
     std::string option_argument;
-    int number_of_bursts;
-
-    int number_of_processes;
-
-    unsigned int cpu_time_executed;
-    unsigned int io_time_executed;
-
-    unsigned int start_time;
-    unsigned int end_time;
-    unsigned int current_time;
-
-    void sort_into_queues();
-
-    void sort_ready_queue();
-
-    void sort_blocked_queue();
-
-    void update_queues();
-
-    void print();
 };
 
 #endif
