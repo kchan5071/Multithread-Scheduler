@@ -12,7 +12,7 @@
 FILE* open_file(std::string filename) {
     FILE *file = fopen(filename.c_str() , "r");
     if (file == NULL) {
-        fprintf(stderr, "Error opening file: %s\n", filename.c_str());
+        fprintf(stderr, "Unable to open %s\n", filename.c_str());
         exit(1);
     }
     return file;
@@ -51,9 +51,16 @@ std::vector<int> convert_line_to_ints(std::string line) {
 void check_if_odd(std::vector< std::vector<int> > lines) {
     for (int i = 0; i < lines.size(); i++) {
         if (lines[i].size() % 2 != 1) {
-            fprintf(stderr, "odd number of burst in line %i\n", i + 1);
+            fprintf(stderr, "There must be an odd number of bursts for each process\n");
             exit(NORMAL_EXIT);
         }
+    }
+}
+
+void check_for_valid_alpha(float alpha) {
+    if (alpha < 0 || alpha > 1) {
+        fprintf(stderr, "Alpha for exponential averaging must be within (0.0, 1.0)\n");
+        exit(NORMAL_EXIT);
     }
 }
 
@@ -61,7 +68,7 @@ void check_contains_zero_or_negative(std::vector< std::vector<int> > lines) {
     for (int i = 0; i < lines.size(); i++) {
         for (int j = 0; j < lines[i].size(); j++) {
             if (lines[i][j] <= 0) {
-                fprintf(stderr, "zero or less burst in line %i\n", i + 1);
+                fprintf(stderr, "A burst number must be bigger than 0\n");
                 exit(NORMAL_EXIT);
             }
         }
@@ -117,6 +124,7 @@ int main(int argc, char **argv) {
     } catch (std::invalid_argument e) {
         args.option_argument = 1.0;
     }
+    check_for_valid_alpha(args.option_argument);
     if (pthread_create(&scheduler_thread, NULL, run_scheduler, (void *)&args) != 0) {
         fprintf(stderr, "Error creating thread\n");
     }

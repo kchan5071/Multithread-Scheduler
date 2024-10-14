@@ -33,25 +33,31 @@ void print_process(Process process) {
     }
     printf("Estimated CPU Burst Time: %f\n", process.estimated_cpu_burst_time);
     printf("\n");
+    printf("Estimated Bursts: ");
+    for (int i = 0; i < process.estimated_bursts.size(); i++) {
+        printf("%f  ", i, process.estimated_bursts[i]);
+    }
+    printf("\n");
 }
 
 int get_remaining_bursts(Process process) {
     return process.executed_cpu_bursts + process.executed_io_bursts;
 }
 
-void calculate_estimated_bursts(Process* process, float alpha) {
-    if (alpha == 1) {
-        process->estimated_cpu_burst_time = process->cpu_bursts[0];
-    } 
-    else {
-        if (process->estimated_bursts.size() == 0) {
-            process->estimated_bursts.push_back(process->cpu_bursts[0]);
-        } else {
-            process->estimated_bursts.push_back(alpha * process->cpu_bursts[process->estimated_bursts.size() - 1] + 
-                                                (1 - alpha) * process->estimated_bursts[process->estimated_bursts.size() - 1]);
-        }
-        process->estimated_cpu_burst_time = process->estimated_bursts[process->estimated_bursts.size() - 1];
+void calculate_estimated_bursts(Process* process, float alpha, int new_time) {
+    float estimated_burst = 0;
+    if (process->estimated_bursts.size() == 0) {
+        estimated_burst = process->cpu_bursts[0];
+    } else {
+        estimated_burst = alpha * new_time + (1 - alpha) * process->estimated_bursts[process->estimated_bursts.size() - 1];
     }
+    process->estimated_bursts.push_back(estimated_burst);
+    printf("Estimated Burst: %f\n", estimated_burst);
+    printf("ESTIMATED BURST ARRAY\n");
+    for (int i = 0; i < process->estimated_bursts.size(); i++) {
+        printf("%f\t", process->estimated_bursts[i]);
+    }
+    printf("\n");
 }
 
 void* remove_cpu_burst(void* ptr) {

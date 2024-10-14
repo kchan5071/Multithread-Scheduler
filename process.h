@@ -17,13 +17,14 @@ struct Process {
     int io_time;
     int cpu_time;
     float estimated_cpu_burst_time;
+    std::vector<int> burst_times;
 
     std::vector<float> estimated_bursts;
     std::vector<int> cpu_bursts;
     std::vector<int> io_bursts;
 };
 
-void calculate_estimated_bursts(Process* process, float alpha);
+void calculate_estimated_bursts(Process* process, float alpha, int new_time);
 
 void* remove_cpu_burst(void* ptr);
 
