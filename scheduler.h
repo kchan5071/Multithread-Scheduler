@@ -27,6 +27,7 @@ struct SchedulerArgs {
     std::vector< std::vector<int> > lines;
     bool exponential;
     float option_argument;
+    bool running;
 };
 
 #endif

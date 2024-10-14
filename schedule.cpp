@@ -113,20 +113,24 @@ int main(int argc, char **argv) {
     SchedulerArgs args;
     args.lines = lines;
     args.exponential = exponential;
+    args.running = true;
     try {
         args.option_argument = std::stof(option_argument);
     } catch (std::invalid_argument e) {
         args.option_argument = 0.0;
     }
-    pthread_create(&scheduler_thread, NULL, run_scheduler, (void *)&args);
+    if (pthread_create(&scheduler_thread, NULL, run_scheduler, (void *)&args) != 0) {
+        fprintf(stderr, "Error creating thread\n");
+    }
 
     //wait for scheduler to finish
-    pthread_join(scheduler_thread, NULL);
+    if (pthread_detach(scheduler_thread) != 0) {
+        fprintf(stderr, "Error detaching thread\n");
+    }
 
-
-
-
-
+    while (args.running) {
+        sleep(1);
+    }
 
     return 0;
 }

@@ -20,24 +20,26 @@ void print_queue(std::vector<Process> queue, std::string name) {
     }
 }
 
-std::vector<Process> sort_ready_queue(std::vector<Process> processes) {
-    if (processes.size() <= 1) {
-        return processes;
-    }
-    std::stable_sort(processes.begin(), processes.end(), [](Process a, Process b) {
-        return a.estimated_cpu_burst_time < b.estimated_cpu_burst_time;
-    });
-    return processes;
+bool compare_ready_processes(const Process &a, const Process &b) {
+    return a.estimated_cpu_burst_time < b.estimated_cpu_burst_time;
 }
 
-std::vector<Process> sort_blocked_queue(std::vector<Process> processes) {
+bool compare_blocked_processes(const Process &a, const Process &b) {
+    return a.io_bursts[0] < b.io_bursts[0];
+}
+
+void sort_ready_queue(std::vector<Process>& processes) {
     if (processes.size() <= 1) {
-        return processes;
+        return;
     }
-    std::stable_sort(processes.begin(), processes.end(), [](Process a, Process b) {
-        return a.io_bursts[0] < b.io_bursts[0];
-    });
-    return processes;
+    std::stable_sort(processes.begin(), processes.end(), compare_ready_processes);
+}
+
+void sort_blocked_queue(std::vector<Process> &processes) {
+    if (processes.size() <= 1) {
+        return;
+    }
+    std::stable_sort(processes.begin(), processes.end(), compare_blocked_processes);
 }
 
 std::vector<Process> remove_first_process(std::vector<Process> processes) {
@@ -94,7 +96,7 @@ void run_cpu_burst(Process &process) {
 }
 
 void run_io_burst(Process &process) {
-    if (process.io_bursts.size() == NULL) {
+    if (process.io_bursts.size() == 0) {
         return;
     }
     pthread_t process_thread;
@@ -129,6 +131,7 @@ void* run_scheduler(void *ptr) {
     std::vector<std::vector<int>> lines = args->lines;
     bool exponential = args->exponential;
     float option_argument = args->option_argument;
+    bool running = args->running;
 
     // Log process bursts
     for (int i = 0; i < lines.size(); i++) {
@@ -145,18 +148,20 @@ void* run_scheduler(void *ptr) {
 
 
     std::vector<Process> processes = create_processes(lines);
-    calculate_estimated_bursts(processes, option_argument);
 
     initialize_queues(processes, ready_queue, blocked_queue);
     
     // Run scheduler
     int total_time = 0;
     int current_burst_time = 0;
+
+
+    calculate_estimated_bursts(ready_queue, option_argument);
+    sort_ready_queue(ready_queue);
     ready_queue[0].cpu_bursts[0]++;
     while (!all_processes_finished(processes)) {
 
         calculate_estimated_bursts(ready_queue, option_argument);
-        print_queue(ready_queue, "ready");
         sort_ready_queue(ready_queue);
         sort_blocked_queue(blocked_queue);
 
@@ -186,7 +191,6 @@ void* run_scheduler(void *ptr) {
                 process.completion_time = total_time;
                 completed_processes.push_back(process);
                 log_cpuburst_execution(process.pid, current_burst_time, process.io_time, total_time, COMPLETED);
-                log_process_completion(process.pid, process.completion_time, process.wait_time);
                 ready_queue = remove_first_process(ready_queue);
                 current_burst_time = 0;
             }
@@ -219,6 +223,11 @@ void* run_scheduler(void *ptr) {
 
         total_time++;
         current_burst_time++;
+    }
+    args->running = false;
+
+    for (int i = 0; i < completed_processes.size(); i++) {
+        log_process_completion(completed_processes[i].pid, completed_processes[i].completion_time, completed_processes[i].wait_time);
     }
     return NULL;
 }
