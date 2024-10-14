@@ -59,11 +59,11 @@ void check_if_odd(std::vector< std::vector<int> > lines) {
     }
 }
 
-void check_contains_zero(std::vector< std::vector<int> > lines) {
+void check_contains_zero_or_negative(std::vector< std::vector<int> > lines) {
     for (int i = 0; i < lines.size(); i++) {
         for (int j = 0; j < lines[i].size(); j++) {
-            if (lines[i][j] == 0) {
-                fprintf(stderr, "zero burst in line %i\n", i + 1);
+            if (lines[i][j] <= 0) {
+                fprintf(stderr, "zero or less burst in line %i\n", i + 1);
                 exit(NORMAL_EXIT);
             }
         }
@@ -89,10 +89,6 @@ int main(int argc, char **argv) {
     //get filename from first argument
     std::string filename = argv[optind];
 
-    printf("Exponential: %d\n", exponential);
-    std::cout << "string optarg: " << option_argument << std::endl;
-    std::cout << "filename: " << filename << std::endl;
-
     //open file
     FILE *file = open_file(filename.c_str());
 
@@ -110,21 +106,18 @@ int main(int argc, char **argv) {
 
     //check if valid input
     check_if_odd(lines);
-    check_contains_zero(lines);
-
-    // for (int i = 0; i < lines.size(); i++) {
-    //     for (int j = 0; j < lines[i].size(); j++) {
-    //         printf("%d ", lines[i][j]);
-    //     }
-    //     printf("\n");
-    // }
+    check_contains_zero_or_negative(lines);
 
     //create scheduler in new thread
     pthread_t scheduler_thread;
     SchedulerArgs args;
     args.lines = lines;
     args.exponential = exponential;
-    args.option_argument = option_argument;
+    try {
+        args.option_argument = std::stof(option_argument);
+    } catch (std::invalid_argument e) {
+        args.option_argument = 0.0;
+    }
     pthread_create(&scheduler_thread, NULL, run_scheduler, (void *)&args);
 
     //wait for scheduler to finish

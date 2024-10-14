@@ -1,0 +1,40 @@
+        printf("Total elapsed time: %d\n", total_elapsed_time);
+        printf("Ready queue size: %lu\n", ready_queue.size());
+        printf("Blocked queue size: %lu\n", blocked_queue.size());
+        print_queue(ready_queue, "ready");
+        print_queue(blocked_queue, "blocked");
+        // Sort ready queue by next CPU burst
+        sort_processes(ready_queue);
+
+        // Sort blocked queue by next IO burst
+        blocked_queue = sort_processes(blocked_queue);
+
+        int current_burst = ready_queue[0].cpu_bursts[0];
+        // Run CPU burst if ready queue is not empty        
+        if (ready_queue.size() != 0) {
+            update_io_from_cpu_burst(ready_queue[0], ready_queue, blocked_queue, current_burst);
+            run_cpu_burst(ready_queue[0], ready_queue, blocked_queue);
+            //update io burst
+            log_cpuburst_execution(ready_queue[0].pid, current_burst, 0, total_elapsed_time, ENTER_IO);
+            
+            //update queues
+            blocked_queue.push_back(ready_queue[0]);
+            ready_queue = remove_first_process(ready_queue);
+        }
+        //if ready queue is empty and blocked queue[0] is 0, move to ready queue
+        else if (blocked_queue.size() != 0 && get_next_io_burst(blocked_queue[0]) == 0) {
+            printf("moving to ready queue\n");
+            Process process = blocked_queue[0];
+            ready_queue.push_back(process);
+            remove_first_process(blocked_queue);
+            log_cpuburst_execution(process.pid, 0, 0, total_elapsed_time, ENTER_IO);
+        }
+        //if ready queue is empty and blocked queue[0] is not 0, run io burst
+        else if (blocked_queue.size() != 0) {
+            current_burst = run_io_burst(blocked_queue[0], ready_queue, blocked_queue);
+        }
+
+        // Increment total elapsed time
+        total_elapsed_time += current_burst;
+        Process process = ready_queue[0];
+    }

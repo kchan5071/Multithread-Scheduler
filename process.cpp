@@ -18,19 +18,20 @@ int get_next_io_burst(Process process) {
 }
 
 void print_process(Process process) {
-    printf("pid: %d\n", process.pid);
-    printf("remaining_bursts: %d\n", process.remaining_bursts);
-    printf("number_of_cpu_bursts: %d\n", process.executed_cpu_bursts);
-    printf("number_of_io_bursts: %d\n", process.executed_io_bursts);
-    printf("completion_time: %d\n", process.completion_time);
+    printf("pid: %d\t", process.pid);
+    //print remoaining bursts, cpu bursts, io bursts, in the same line
+    printf("remaining_bursts: %d\t", process.remaining_bursts);
+    printf("executed_cpu_bursts: %d\t", process.executed_cpu_bursts);
+    printf("executed_io_bursts: %d\t", process.executed_io_bursts);
     printf("cpu_bursts: ");
     for (int i = 0; i < process.cpu_bursts.size(); i++) {
         printf("%d ", process.cpu_bursts[i]);
     }
-    printf("\nio_bursts: ");
+    printf("\tio_bursts: ");
     for (int i = 0; i < process.io_bursts.size(); i++) {
         printf("%d ", process.io_bursts[i]);
     }
+    printf("Estimated CPU Burst Time: %f\n", process.estimated_cpu_burst_time);
     printf("\n");
 }
 
@@ -38,28 +39,47 @@ int get_remaining_bursts(Process process) {
     return process.executed_cpu_bursts + process.executed_io_bursts;
 }
 
-void* run_cpu_burst(void* ptr) {
-    Process process = *((Process*)ptr);
-    int burst = process.cpu_bursts[0];
-    process.remaining_bursts--;
-    process.completion_time += burst;
-    //remove burst from cpu
-    if (process.executed_cpu_bursts > 0) {
-        process.cpu_bursts.erase(process.cpu_bursts.begin());
-        process.executed_cpu_bursts--;
+void calculate_estimated_bursts(Process* process, float alpha) {
+    int sum = 0;
+    for (int time : process->cpu_bursts) {
+        sum += time;
     }
+    process->estimated_cpu_burst_time = (float)sum / process->cpu_bursts.size();
+}
+
+void* remove_cpu_burst(void* ptr) {
+    Process* process = static_cast<Process*>(ptr);
+    process->cpu_bursts.erase(process->cpu_bursts.begin());
+    process->executed_cpu_bursts++;
+    process->remaining_bursts--;
+    process->executing = false;
+    return NULL;
+}
+
+void* remove_io_burst(void* ptr) {
+    Process* process = static_cast<Process*>(ptr);
+    process->io_bursts.erase(process->io_bursts.begin());
+    process->executed_io_bursts++;
+    process->remaining_bursts--;
+    process->executing = false;
+    return NULL;
+}
+
+
+void* run_cpu_burst(void* ptr) {
+    Process* process = static_cast<Process*>(ptr);
+    process->cpu_bursts[0]--;
+    process->completion_time++;
+    process->cpu_time;
+    process->executing = false;
     return NULL;
 }
 
 void* run_io_burst(void* ptr) {
-    Process process = *((Process*)ptr);
-    int burst_length = process.io_bursts[0];
-    process.io_bursts[0] -= burst_length;
-    process.completion_time += burst_length;
-    //remove burst from io if it is finished
-    if (process.io_bursts[0] <= 0) {
-        process.io_bursts.erase(process.io_bursts.begin());
-        process.executed_io_bursts--;
-    }
+    Process* process = static_cast<Process*>(ptr);
+    process->io_bursts[0]--;
+    process->io_time++;
+    process->completion_time++;
+    process->executing = false;
     return NULL;
 }

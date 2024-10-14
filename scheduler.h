@@ -26,7 +26,7 @@ bool all_processes_finished(std::vector<Process> processes);
 struct SchedulerArgs {
     std::vector< std::vector<int> > lines;
     bool exponential;
-    std::string option_argument;
+    float option_argument;
 };
 
 #endif
