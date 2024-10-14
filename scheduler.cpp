@@ -168,7 +168,6 @@ void* run_scheduler(void *ptr) {
     for (int i = 0; i < ready_queue.size(); i++) {
         get_initial_estimation(ready_queue[i]);
     }
-    calculate_estimated_bursts(ready_queue, option_argument);
     sort_ready_queue(ready_queue);
     while (!all_processes_finished(processes)) {
 
@@ -203,11 +202,12 @@ void* run_scheduler(void *ptr) {
             remove_cpu_burst(process);
             //check if process has completed all bursts
             if (all_bursts_completed(process)) {
+                //log process completion
                 process.completion_time = total_time + 1;
-                completed_processes.push_back(process);
                 log_cpuburst_execution(process.pid, process.cpu_time, process.io_time, total_time + 1, COMPLETED);
+                //move process to completed queue
+                completed_processes.push_back(process);
                 ready_queue = remove_first_process(ready_queue);
-                calculate_estimated_bursts(ready_queue, option_argument);
             }
             else {
                 log_cpuburst_execution(process.pid, process.cpu_time, process.io_time, total_time + 1, ENTER_IO);
@@ -223,12 +223,14 @@ void* run_scheduler(void *ptr) {
                 remove_io_burst(process);
                 ready_queue.push_back(process);
                 blocked_queue.erase(blocked_queue.begin() + i);
+                calculate_estimated_bursts(ready_queue, option_argument);
                 i--;
             }
             else if (process.io_bursts.size() == 0) {
                 process.io_time += current_burst_time;
                 ready_queue.push_back(process);
                 blocked_queue = remove_first_process(blocked_queue);
+                calculate_estimated_bursts(ready_queue, option_argument);
                 i--;
             }
         }
@@ -236,28 +238,20 @@ void* run_scheduler(void *ptr) {
         if (ready_queue.size() == 0 && blocked_queue.size() == 0) {
             break;
         }
-        // sleep(1);
-        //increment simulation
         total_time++;
         current_burst_time++;
     }
     args->running = false;
-    //log process completions
-    // for (Process process : completed_processes) {
-    //     print_process(process);
-    // }
-    // for (Process process : completed_processes) {
-    //     log_process_completion(process.pid, process.completion_time, process.wait_time);
-    // }
 
-    // for (int i = 0; i < processes.size(); i++) {
-    //     printf("process[%d] estimated_bursts size: %d\n", processes[i].pid, processes[i].estimated_bursts.size());
-    // }
-
+    // log process completions
+    for (Process process : completed_processes) {
+        log_process_completion(process.pid, process.completion_time, process.wait_time);
+    }
 
     //log estimated bursts
-    for (int i = 0; i < processes.size(); i++) {
-        log_process_estimated_bursts(processes[i].pid, (processes[i].estimated_bursts.data()), processes[i].estimated_bursts.size());
+    for (Process process : completed_processes) {
+        printf("%zu", process.estimated_bursts.size());
+        log_process_estimated_bursts(process.pid, reinterpret_cast<float*>(process.estimated_bursts.data()), (size_t)process.estimated_bursts.size());
     }
     return NULL;
 }
@@ -297,7 +291,7 @@ Process create_process(int pid, std::vector<int> bursts) {
         }
     }
 
-    //create process
+    //create process struct
     Process process;
     process.pid = pid;
     process.remaining_bursts = bursts.size();
@@ -310,5 +304,8 @@ Process create_process(int pid, std::vector<int> bursts) {
     process.io_time = 0;
     process.cpu_time = 0;
     process.wait_time = 0;
+    process.estimated_io_bursts = io_bursts;
+    process.estimated_bursts = std::vector<float>();
+
     return process;
 }

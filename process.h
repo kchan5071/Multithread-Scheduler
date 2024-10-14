@@ -20,6 +20,7 @@ struct Process {
     std::vector<int> burst_times;
 
     std::vector<float> estimated_bursts;
+    std::vector<int> estimated_io_bursts;
     std::vector<int> cpu_bursts;
     std::vector<int> io_bursts;
 };
@@ -37,6 +38,10 @@ int get_next_io_burst(Process process);
 int get_remaining_bursts(Process process);
 
 void print_process(Process process);
+
+void print_estimated_bursts_process(Process process);
+
+std::vector<float> convert_to_float_array(Process process);
 
 void* run_cpu_burst(void* ptr);
 
