@@ -153,7 +153,7 @@ void* run_scheduler(void *ptr) {
     
     // Run scheduler
     int total_time = 0;
-    int current_burst_time = 0;
+    int current_burst_time = 1;
 
 
     calculate_estimated_bursts(ready_queue, option_argument);
@@ -161,9 +161,14 @@ void* run_scheduler(void *ptr) {
     ready_queue[0].cpu_bursts[0]++;
     while (!all_processes_finished(processes)) {
 
+        printf("--------------------------------------------------\n");
         calculate_estimated_bursts(ready_queue, option_argument);
         sort_ready_queue(ready_queue);
         sort_blocked_queue(blocked_queue);
+
+        print_queue(ready_queue, "READY");
+        print_queue(blocked_queue, "BLOCKED");
+        print_queue(completed_processes, "COMPLETED");
 
         //update blocked queue, subtract 1 from each process's io burst
         for (int i = 0; i < blocked_queue.size(); i++) {
@@ -190,16 +195,14 @@ void* run_scheduler(void *ptr) {
             if (all_bursts_completed(process)) {
                 process.completion_time = total_time;
                 completed_processes.push_back(process);
-                log_cpuburst_execution(process.pid, current_burst_time, process.io_time, total_time, COMPLETED);
+                log_cpuburst_execution(process.pid, process.cpu_time, process.io_time, total_time, COMPLETED);
                 ready_queue = remove_first_process(ready_queue);
-                current_burst_time = 0;
             }
             else {
-                log_cpuburst_execution(process.pid, current_burst_time, process.io_time, total_time, ENTER_IO);
+                log_cpuburst_execution(process.pid, process.cpu_time, process.io_time, total_time, ENTER_IO);
                 //move process to blocked queue
                 blocked_queue.push_back(process);
                 ready_queue = remove_first_process(ready_queue);
-                current_burst_time = 0;
             }
         }
         //check if any process in blocked queue has completed its io burst
@@ -220,14 +223,28 @@ void* run_scheduler(void *ptr) {
         if (ready_queue.size() == 0 && blocked_queue.size() == 0) {
             break;
         }
-
+        sleep(1);
+        //increment simulation
         total_time++;
         current_burst_time++;
     }
     args->running = false;
+    //log process completions
+    for (Process process : completed_processes) {
+        // print_process(process);
+    }
+    for (Process process : completed_processes) {
+        log_process_completion(process.pid, process.completion_time, process.wait_time);
+    }
 
-    for (int i = 0; i < completed_processes.size(); i++) {
-        log_process_completion(completed_processes[i].pid, completed_processes[i].completion_time, completed_processes[i].wait_time);
+    for (int i = 0; i < processes.size(); i++) {
+        printf("process[%d] estimated_bursts size: %d\n", processes[i].pid, processes[i].estimated_bursts.size());
+    }
+
+
+    //log estimated bursts
+    for (int i = 0; i < processes.size(); i++) {
+        log_process_estimated_bursts(processes[i].pid, reinterpret_cast<float*>(processes[i].estimated_bursts.data()), processes[i].estimated_bursts.size());
     }
     return NULL;
 }

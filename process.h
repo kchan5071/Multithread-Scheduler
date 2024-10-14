@@ -16,9 +16,9 @@ struct Process {
     bool executing;
     int io_time;
     int cpu_time;
-    double estimated_cpu_burst_time;
+    float estimated_cpu_burst_time;
 
-    
+    std::vector<float> estimated_bursts;
     std::vector<int> cpu_bursts;
     std::vector<int> io_bursts;
 };

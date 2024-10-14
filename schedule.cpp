@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <string>
 #include <iostream>
 #include <unistd.h>
@@ -117,7 +115,7 @@ int main(int argc, char **argv) {
     try {
         args.option_argument = std::stof(option_argument);
     } catch (std::invalid_argument e) {
-        args.option_argument = 0.0;
+        args.option_argument = 1.0;
     }
     if (pthread_create(&scheduler_thread, NULL, run_scheduler, (void *)&args) != 0) {
         fprintf(stderr, "Error creating thread\n");
