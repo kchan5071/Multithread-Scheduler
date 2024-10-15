@@ -71,15 +71,10 @@ void* run_scheduler(void *ptr) {
     std::vector<Process> ready_queue = std::vector<Process>();
     std::vector<Process> blocked_queue = std::vector<Process>();
     std::vector<Process> completed_processes = std::vector<Process>();
-
-
     std::vector<Process> processes = create_processes(lines);
-
     initialize_queues(processes, ready_queue, blocked_queue);
     
-    // Run scheduler
-    int total_time = 1;
-
+    //initialize estimated burst times
     if (exponential) {
         for (int i = 0; i < ready_queue.size(); i++) {
             get_initial_estimation(ready_queue[i]);
@@ -88,13 +83,15 @@ void* run_scheduler(void *ptr) {
     else {
         for (int i = 0; i < ready_queue.size(); i++) {
             ready_queue[i].all_burst_times.push_back(ready_queue[i].cpu_bursts[0]);
+            ready_queue[i].estimated_cpu_burst_time = ready_queue[i].cpu_bursts[0];
         }
     }
-
+    //run scheduler
+    int total_time = 0;
     sort_ready_queue(ready_queue);
     while (!all_processes_finished(ready_queue, blocked_queue)) {
-        sort_ready_queue(ready_queue);
-        sort_blocked_queue(blocked_queue);
+        total_time++;
+        bool ready_is_sortable = ready_queue.size() == 0;
 
         //update blocked queue, subtract 1 from each process's io burst
         for (int i = 0; i < blocked_queue.size(); i++) {
@@ -120,14 +117,19 @@ void* run_scheduler(void *ptr) {
             if (all_bursts_completed(process)) {
                 process.completion_time = total_time;
                 // printf("PROCESS %d COMPLETED\n", process.pid);
+                ready_is_sortable = true;
                 log_cpuburst_execution(process.pid, process.cpu_time, process.io_time, total_time, COMPLETED);
                 move_to_completed(process, completed_processes, ready_queue);
             }
             else {
                 // printf("PROCESS %d ENTERING IO\n", process.pid);
                 process.all_burst_times.push_back(process.io_bursts[0]);
+                ready_is_sortable = true;
                 log_cpuburst_execution(process.pid, process.cpu_time, process.io_time, total_time, ENTER_IO);
                 move_to_blocked_from_ready(process, ready_queue, blocked_queue);
+                sort_ready_queue(ready_queue);
+                sort_blocked_queue(blocked_queue);
+
             }
         }
         //check if any process in blocked queue has completed its io burst
@@ -142,10 +144,13 @@ void* run_scheduler(void *ptr) {
                 process.io_time = total_time - (process.cpu_time + process.wait_time);
                 remove_io_burst(process);
                 move_to_ready_from_blocked(process, ready_queue, blocked_queue);
+                sort_blocked_queue(blocked_queue);
                 i--;
             }
         }
-        total_time++;
+        if (ready_is_sortable) {
+            sort_ready_queue(ready_queue);
+        }
     }
     args->running = false;
 
