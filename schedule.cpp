@@ -4,13 +4,22 @@
 #include <getopt.h>
 #include <vector>
 #include <pthread.h>
-
 #include "scheduler.h"
+
+//Kai Chan
+//827673009
 
 #define NORMAL_EXIT 0 
 
+/**
+ * Open a file with the given filename
+ * @param filename the name of the file to open
+ * @return the file pointer
+ */
 FILE* open_file(std::string filename) {
+    //open file
     FILE *file = fopen(filename.c_str() , "r");
+    //check if file was opened successfully
     if (file == NULL) {
         fprintf(stderr, "Unable to open %s\n", filename.c_str());
         exit(1);
@@ -18,10 +27,18 @@ FILE* open_file(std::string filename) {
     return file;
 }
 
+/**
+ * Read a line from a file
+ * @param file the file to read from
+ * @return the line read from the file
+ */
 std::string read_line(FILE *file) {
+    //initialize variables
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
+
+    //read line from file
     read = getline(&line, &len, file);
     if (read == -1) {
         return "";
@@ -29,6 +46,11 @@ std::string read_line(FILE *file) {
     return std::string(line);
 }
 
+/**
+ * Convert a line to a vector of integers
+ * @param line the line to convert
+ * @return the vector of integers
+ */
 std::vector<int> convert_line_to_ints(std::string line) {
     std::vector<int> ints = std::vector<int>();
     std::string num = "";
@@ -48,8 +70,13 @@ std::vector<int> convert_line_to_ints(std::string line) {
     return ints;
 }
 
+/**
+ * Check if the number of bursts for each process is odd
+ * @param lines the lines to check
+ */
 void check_if_odd(std::vector< std::vector<int> > lines) {
     for (int i = 0; i < lines.size(); i++) {
+        //if the number of bursts is not odd, print an error message and exit
         if (lines[i].size() % 2 != 1) {
             fprintf(stderr, "There must be an odd number of bursts for each process\n");
             exit(NORMAL_EXIT);
@@ -57,6 +84,10 @@ void check_if_odd(std::vector< std::vector<int> > lines) {
     }
 }
 
+/**
+ * Check if the alpha value is valid (0 < alpha < 1)
+ * @param alpha the alpha value to check
+ */
 void check_for_valid_alpha(float alpha) {
     if (alpha <= 0 || alpha >= 1) {
         fprintf(stderr, "Alpha for exponential averaging must be within (0.0, 1.0)\n");
@@ -64,9 +95,16 @@ void check_for_valid_alpha(float alpha) {
     }
 }
 
+/**
+ * Check if any burst is 0 or negative from a 2D vector of integers
+ * @param lines the lines to check
+ */
 void check_contains_zero_or_negative(std::vector< std::vector<int> > lines) {
+    //iterate through each line
     for (int i = 0; i < lines.size(); i++) {
+        //iterate through each number in the line
         for (int j = 0; j < lines[i].size(); j++) {
+            //if the number is 0 or negative, print an error message and exit
             if (lines[i][j] <= 0) {
                 fprintf(stderr, "A burst number must be bigger than 0\n");
                 exit(NORMAL_EXIT);
@@ -75,6 +113,12 @@ void check_contains_zero_or_negative(std::vector< std::vector<int> > lines) {
     }
 }
 
+/**
+ * Main function
+ * @param argc the number of arguments
+ * @param argv the arguments
+ * @return the exit status
+ */
 int main(int argc, char **argv) {
 
     //parse command line arguments
@@ -119,12 +163,16 @@ int main(int argc, char **argv) {
     args.lines = lines;
     args.exponential = exponential;
     args.running = true;
+    //parse alpha value
     try {
         args.option_argument = std::stof(option_argument);
     } catch (std::invalid_argument e) {
         args.option_argument = 0.5;
     }
+    //check if alpha is valid
     check_for_valid_alpha(args.option_argument);
+
+    //create scheduler thread
     if (pthread_create(&scheduler_thread, NULL, run_scheduler, (void *)&args) != 0) {
         fprintf(stderr, "Error creating thread\n");
     }

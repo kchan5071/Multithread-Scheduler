@@ -7,7 +7,13 @@
 #include <pthread.h>
 #include "process.h"
 
-#define WAIT_FOR_THREAD 0
+//Kai Chan
+//827673009
+
+#define WAIT_FOR_THREAD 0 //can be set to wait for thread to finish, 0 for no wait
+
+//while not directly doing threading, it manages the functions that do
+//those can be found in process.cpp
 
 void remove_cpu_burst(Process &process);
 

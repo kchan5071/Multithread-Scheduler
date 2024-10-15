@@ -2,47 +2,83 @@
 #include <iostream>
 #include <unistd.h>
 
+//Kai Chan
+//827673009
+
+/**
+ * Create a process with the given pid and bursts
+ * @param pid the process id
+ * @param bursts the cpu and io bursts
+ * @return the process
+ */
 void initialize_queues(std::vector<Process> processes, std::vector<Process> &ready_queue, std::vector<Process> &blocked_queue) {
     for (int i = 0; i < processes.size(); i++) {
         ready_queue.push_back(processes[i]);
     }
 }
 
+/**
+ * Create a process with the given pid and bursts
+ * @param pid the process id
+ * @param bursts the cpu and io bursts
+ * @return the process
+ */
 void get_initial_estimation(Process &process) {
     //average of all cpu bursts
     float sum = 0;
     for (int i = 0; i < process.cpu_bursts.size(); i++) {
         sum += process.cpu_bursts[i];
     }
+    //set initial estimation
     process.estimated_cpu_burst_time = sum / process.cpu_bursts.size();
     process.previous_burst = process.cpu_bursts[0];
     process.previous_prediction = process.estimated_cpu_burst_time;
     process.all_burst_times.push_back(process.estimated_cpu_burst_time);
 }
 
+/**
+ * Create a process with the given pid and bursts
+ * @param pid the process id
+ * @param bursts the cpu and io bursts
+ * @return the process
+ */
 void move_to_completed(Process &process, std::vector<Process> &completed_processes, std::vector<Process> &ready_queue) {
     completed_processes.push_back(process);
     ready_queue.erase(ready_queue.begin());
 }
 
+/**
+ * Create a process with the given pid and bursts
+ * @param pid the process id
+ * @param bursts the cpu and io bursts
+ * @return the process
+ */
 void move_to_ready_from_blocked(Process &process, std::vector<Process> &ready_queue, std::vector<Process> &blocked_queue) {
     ready_queue.push_back(process);
     blocked_queue.erase(blocked_queue.begin());
 }
 
+/**
+ * Create a process with the given pid and bursts
+ * @param pid the process id
+ * @param bursts the cpu and io bursts
+ * @return the process
+ */
 void move_to_blocked_from_ready(Process &process, std::vector<Process> &ready_queue, std::vector<Process> &blocked_queue) {
     blocked_queue.push_back(process);
     ready_queue.erase(ready_queue.begin());
 }
 
-void print_estimated_bursts(std::vector<Process> processes) {
-    for (int i = 0; i < processes.size(); i++) {
-        printf("Process %d estimated burst time: %f\n", processes[i].pid, processes[i].estimated_cpu_burst_time);
-    }
-}
-
+/**
+ * Create a process with the given pid and bursts
+ * @param pid the process id
+ * @param bursts the cpu and io bursts
+ * @return the process
+ */
 void log_processes(std::vector<Process> completed_processes) {
+    //sort processes by completion time
     sort_completed_processes(completed_processes);
+    //log process completions
     for (Process process : completed_processes) {
         log_process_completion(process.pid, process.completion_time, process.wait_time);
     }
@@ -53,6 +89,12 @@ void log_processes(std::vector<Process> completed_processes) {
     }
 }
 
+/**
+ * Create a process with the given pid and bursts (MAIN THREAD FUNCTION)
+ * @param pid the process id
+ * @param bursts the cpu and io bursts
+ * @return the process
+ */
 void* run_scheduler(void *ptr) {
     // Get arguments
     int total_elapsed_time = 0;
@@ -119,6 +161,7 @@ void* run_scheduler(void *ptr) {
                 process.completion_time = total_time;
                 ready_is_sortable = true;
                 log_cpuburst_execution(process.pid, process.cpu_time, process.io_time, total_time, COMPLETED);
+                // move process to completed
                 move_to_completed(process, completed_processes, ready_queue);
             }
             else {
@@ -126,7 +169,9 @@ void* run_scheduler(void *ptr) {
                 process.all_burst_times.push_back(process.io_bursts[0]);
                 ready_is_sortable = true;
                 log_cpuburst_execution(process.pid, process.cpu_time, process.io_time, total_time, ENTER_IO);
+                // move process to blocked queue
                 move_to_blocked_from_ready(process, ready_queue, blocked_queue);
+                // sort blocked queue and ready queue
                 sort_ready_queue(ready_queue);
                 sort_blocked_queue(blocked_queue);
 
@@ -162,17 +207,37 @@ void* run_scheduler(void *ptr) {
     return NULL;
 }
 
+/**
+ * Check if all bursts for a process have been completed
+ * @param process the process to check
+ * @return true if all bursts have been completed, false otherwise
+ */
 bool all_bursts_completed(Process process) {
     return process.cpu_bursts.size() == 0 && process.io_bursts.size() == 0;
 }
 
+/**
+ * Check if all processes have finished
+ * @param ready_queue the ready queue
+ * @param blocked_queue the blocked queue
+ * @return true if all processes have finished, false otherwise
+ */
 bool all_processes_finished(std::vector<Process> ready_queue , std::vector<Process> blocked_queue) {
     return ready_queue.size() == 0 && blocked_queue.size() == 0;
 }
 
+/**
+ * Create a process with the given pid and bursts
+ * @param pid the process id
+ * @param bursts the cpu and io bursts
+ * @return the process
+ */
 std::vector<Process> create_processes(std::vector< std::vector<int> > lines) {
+    //create empty vector of process structs
     std::vector<Process> processes = std::vector<Process>();
+    //iterate through each line
     for (int i = 0; i < lines.size(); i++) {
+        //create process struct
         std::vector<int> bursts = lines[i];
         int pid = i;
         processes.push_back(create_process(pid, bursts));

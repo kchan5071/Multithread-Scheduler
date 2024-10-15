@@ -5,6 +5,9 @@
 #include <algorithm>
 #include "process.h"
 
+//Kai Chan
+//827673009
+
 bool compare_ready_processes(const Process &a, const Process &b);
 
 bool compare_blocked_processes(const Process &a, const Process &b);

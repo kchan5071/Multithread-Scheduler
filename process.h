@@ -6,6 +6,9 @@
 #include <queue>
 #include <string>
 
+//Kai Chan
+//827673009
+
 struct Process {
     int pid;
     int remaining_bursts;

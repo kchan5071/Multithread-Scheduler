@@ -1,3 +1,6 @@
+#Kai Chan
+#827673009
+
 compile:
 	gcc log.c -o log.o -c
 	g++ -std=c++11 -pthread -c process.cpp -o process.o
@@ -10,8 +13,8 @@ schedule:
 	make compile
 run:
 	make compile
-#	./schedule bursts_invalid_odd.txt
-#	./schedule bursts_invalid_zero.txt
+	./schedule bursts_invalid_odd.txt
+	./schedule bursts_invalid_zero.txt
 	./schedule -a .1 bursts_animation.txt
 	./schedule hard_test.txt
 	./schedule -a 0.5 bursts.txt
