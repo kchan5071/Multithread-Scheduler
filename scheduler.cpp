@@ -115,14 +115,14 @@ void* run_scheduler(void *ptr) {
             remove_cpu_burst(process);
             //check if process has completed all bursts
             if (all_bursts_completed(process)) {
+                // process is completed
                 process.completion_time = total_time;
-                // printf("PROCESS %d COMPLETED\n", process.pid);
                 ready_is_sortable = true;
                 log_cpuburst_execution(process.pid, process.cpu_time, process.io_time, total_time, COMPLETED);
                 move_to_completed(process, completed_processes, ready_queue);
             }
             else {
-                // printf("PROCESS %d ENTERING IO\n", process.pid);
+                // process is entering io
                 process.all_burst_times.push_back(process.io_bursts[0]);
                 ready_is_sortable = true;
                 log_cpuburst_execution(process.pid, process.cpu_time, process.io_time, total_time, ENTER_IO);
@@ -135,19 +135,22 @@ void* run_scheduler(void *ptr) {
         //check if any process in blocked queue has completed its io burst
         for (int i = 0; i < blocked_queue.size(); i++) {
             Process &process = blocked_queue[i];
+            //check if process has completed its io burst or if it has no io bursts
             if (process.io_bursts.size() == 0 || process.io_bursts[0] == 0) {
-                // printf("CALCULATING ESTIMATED BURSTS FOR PROCESS %d\n", process.pid);
+                // calculate next estimate
                 int current_cpu_time = process.cpu_bursts[0];
                 float next_estimate = calculate_exponential_averaging(&process, option_argument, current_cpu_time, exponential);
                 process.all_burst_times.push_back(next_estimate);
-                // printf("MOVING PROCESS %d TO READY QUEUE\n", process.pid);
                 process.io_time = total_time - (process.cpu_time + process.wait_time);
+                //remove finished io burst
                 remove_io_burst(process);
+                // move process to ready queue
                 move_to_ready_from_blocked(process, ready_queue, blocked_queue);
                 sort_blocked_queue(blocked_queue);
                 i--;
             }
         }
+        // sort ready queue if necessary
         if (ready_is_sortable) {
             sort_ready_queue(ready_queue);
         }
