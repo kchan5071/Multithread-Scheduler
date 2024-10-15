@@ -17,29 +17,25 @@ struct Process {
     int io_time;
     int cpu_time;
     float estimated_cpu_burst_time;
+    float previous_burst;
+    float previous_prediction;
     std::vector<int> burst_times;
 
-    std::vector<float> estimated_bursts;
-    std::vector<int> estimated_io_bursts;
+    std::vector<float> all_burst_times;
+    std::vector<float> cpu_burst_estimates;
     std::vector<int> cpu_bursts;
     std::vector<int> io_bursts;
 };
 
-void calculate_estimated_bursts(Process* process, float alpha, int new_time);
+float calculate_exponential_averaging(Process* process, float alpha, int new_time, bool exponential);
 
 void* remove_cpu_burst(void* ptr);
 
 void* remove_io_burst(void* ptr);
 
-int get_next_burst(Process process);
-
-int get_next_io_burst(Process process);
+float get_average_burst_time(Process process);
 
 int get_remaining_bursts(Process process);
-
-void print_process(Process process);
-
-void print_estimated_bursts_process(Process process);
 
 std::vector<float> convert_to_float_array(Process process);
 
@@ -47,7 +43,7 @@ void* run_cpu_burst(void* ptr);
 
 void* run_io_burst(void* ptr);
 
-
+Process create_process(int pid, std::vector<int> bursts);
 
 
 

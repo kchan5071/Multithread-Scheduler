@@ -58,7 +58,7 @@ void check_if_odd(std::vector< std::vector<int> > lines) {
 }
 
 void check_for_valid_alpha(float alpha) {
-    if (alpha < 0 || alpha > 1) {
+    if (alpha <= 0 || alpha >= 1) {
         fprintf(stderr, "Alpha for exponential averaging must be within (0.0, 1.0)\n");
         exit(NORMAL_EXIT);
     }
@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
     try {
         args.option_argument = std::stof(option_argument);
     } catch (std::invalid_argument e) {
-        args.option_argument = 1.0;
+        args.option_argument = 0.5;
     }
     check_for_valid_alpha(args.option_argument);
     if (pthread_create(&scheduler_thread, NULL, run_scheduler, (void *)&args) != 0) {

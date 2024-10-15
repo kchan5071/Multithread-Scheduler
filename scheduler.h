@@ -3,10 +3,9 @@
 
 #include <string>
 #include <vector>
-#include <queue>
-#include <algorithm>
-#include <pthread.h>
 #include "process.h"
+#include "sorter.h"
+#include "threaded.h"
 extern "C" {
     #include "log.h"
 }
@@ -21,7 +20,7 @@ Process create_process(int pid, std::vector<int> bursts);
 
 std::vector<Process> sort_processes(std::vector<Process> processes);
 
-bool all_processes_finished(std::vector<Process> processes);
+bool all_processes_finished(std::vector<Process> ready_queue , std::vector<Process> blocked_queue);
 
 struct SchedulerArgs {
     std::vector< std::vector<int> > lines;
